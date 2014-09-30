@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KindCard</title>
+</head>
+<body>
+ 
+    <form action="javascript:void(0);">
+        <h2>List KindCards</h2>
+        <div><input id="listKindCards" type="submit" value="List KindCards" /></div>
+    </form>
+    <div id="listKindCardsResult"></div>
+    
+    <form action="javascript:void(0);">
+      <h2>Insert New KindCard</h2>
+         <div><input id="txtKindCardId" placeholder="KindCard ID Goes Here"></input></div>
+         <div><input id="txtName" placeholder="Name text here"></input></div>
+         <div><input id="txtLocation" placeholder="Location text here"></input></div>
+         <div><input id="txtStory" placeholder="Story text here"></input></div>
+         <div><input id="insertKindCard" type="submit" value="Insert KindCard" /></div>
+    </form>
+    
+    <form action="javascript:void(0);">
+      <h2>Delete KindCard</h2>
+         <div><input id="kindCardId" placeholder="KindCard ID value"></input></div>
+         <div><input id="deleteKindCard" type="submit" value="Delete KindCard"></input></div>
+    </form>
+    
+    
+    <script type="text/javascript">
+        function init() {
+                //Parameters are APIName,APIVersion,CallBack function,API Root 
+                gapi.client.load('kindcardendpoint', 'v1', null, 'https://1-dot-kind-card-service.appspot.com/_ah/api');
+                
+                document.getElementById('listKindCards').onclick = function() {
+                	listKindCards();
+                  }
+                
+                document.getElementById('insertKindCard').onclick = function() {
+                	insertKindCard();
+                }
+                                
+                document.getElementById('deleteKindCard').onclick = function() {
+                	deleteKindCard();
+                }
+        }
+        
+        //List Quotes function that will execute the listQuote call
+        function listKindCards() {
+                gapi.client.kindcardendpoint.listKindCards().execute(function(resp) {
+                        if (!resp.code) {
+                                resp.items = resp.items || [];
+                                var result = "";
+                                for (var i=0;i<resp.items.length;i++) {
+                                		var respItems = resp.items[i];
+                                		// going to have to itterate through here when _UserStory is a list to get each UserStory from every KindCard
+                                        result = result+ respItems.id + "<br/>";
+                                        for (var m=0; m<respItems._userStory.length;m++) {
+                                        	var kindCard = respItems._userStory[m];
+                                        	if (kindCard._userName != null && kindCard._loacation != null && kindCard._story != null && kindCard._date != null) {
+                                        		result = result + "<ul><li>" + respItems._kindCardId + "</li><li>" + kindCard._userName + "</li><li>" + kindCard._loacation + "</li><li>" + kindCard._story + "</li><li>" + kindCard._date.toString() + "</li></ul><br/>";
+                                        	}
+                                        }
+                                }
+                                document.getElementById('listKindCardsResult').innerHTML = result;
+                        }
+                        else {
+                        	console.log(resp);
+                        }
+                });
+        }
+        
+        //Insert Quote function
+        function insertKindCard() {
+                //Validate the entries
+                var kindCardId = document.getElementById('txtKindCardId').value;
+                var name = document.getElementById('txtName').value;
+                var location = document.getElementById('txtLocation').value;
+                var story = document.getElementById('txtStory').value;
+                var date = new Date();
+                
+                //Build the Request Object
+                var userDataArray = [];
+                var userData = {
+	                _userName: name,
+	                _loacation: location,
+	                _story: story,
+	                _date: date
+                };                
+                userDataArray.push(userData);
+                var id = null;
+                var requestData = {};
+                requestData._kindCardId = kindCardId;
+                requestData._userStory = userDataArray;
+                var kindCardId = 
+                gapi.client.kindcardendpoint.getKindCardId(requestData).execute(function(resp) {
+                	response = resp;
+                	afterExecute(response, requestData);
+                });
+        }
+        
+        function afterExecute(response, requestData){
+        	if (!response.code && response.items) {
+        		response.items = response.items || [];
+                var result = "";
+                var kindCard = {};
+                for (var i=0;i<response.items.length;i++) {
+                	kindCard = response.items[i];
+                	id = kindCard.id;
+                }
+                kindCard._userStory.push(requestData._userStory[0]);
+            	gapi.client.kindcardendpoint.updateKindCard(kindCard).execute(function(upresp) {
+                 	if (!upresp.code) {
+                 		console.log(upresp);
+                 	}
+                 	else {
+                 		console.log(upresp);
+                 	}
+             	});
+        	}
+            else if (!response.code && !response.items){
+	                gapi.client.kindcardendpoint.insertKindCard(requestData).execute(function(insresp) {
+	                        if (!insresp.code) {
+	                                //Just logging to console now, you can do your check here/display message
+	                                console.log(insresp);
+	                        }
+	                        else {
+	                        	console.log(insresp);
+	                        }
+	                });
+            }                	
+            else {
+            	console.log(response);
+            }
+        }
+                
+        //Delete Quote function
+        function deleteKindCard() {
+                //Validate the entries
+                var _ID = document.getElementById('kindCardId').value;
+                
+                //Build the Request Object
+                var requestData = {};
+                requestData.id = _ID;
+                console.log(requestData);
+                gapi.client.kindcardendpoint.removeKindCard(requestData).execute(function(resp) {
+                        //Just logging to console now, you can do your check here/display message
+                        console.log(resp);
+                });
+        }
+        
+    </script>
+    <script src="https://apis.google.com/js/client.js?onload=init"></script>
+</body>
+</html>
