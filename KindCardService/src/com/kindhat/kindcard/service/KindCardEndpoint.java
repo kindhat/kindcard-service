@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Named;
-//import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 import javax.jdo.Transaction;
@@ -122,7 +120,7 @@ public class KindCardEndpoint {
 			Query query = mgr.newQuery(KindCard.class);
 			query.setFilter("kindCardId == kindCardIdParam");
 			query.declareParameters("String kindCardIdParam");
-			kindCards = (List<KindCard>) query.execute(kindCardId);
+			kindCards = (List<KindCard>) query.execute(kindCardId.toUpperCase());
 			if(kindCards.isEmpty()) {
 				kindCard = new KindCard(); //return an empty object
 			}
@@ -135,26 +133,6 @@ public class KindCardEndpoint {
 		}
 		return kindCard;
 	}	
-	
-	/**
-	 * This inserts a new entity into App Engine datastore. If the entity already
-	 * exists in the datastore, an exception is thrown.
-	 * It uses HTTP POST method.
-	 *
-	 * @param kindcard the entity to be inserted.
-	 * @return The inserted entity.
-	 */
-	@ApiMethod(name = "insertKindCard")
-	public KindCard insertKindCard(KindCard kindCard) {
-		PersistenceManager mgr = getPersistenceManager();
-		try {
-			doesKindCardExist(kindCard);
-			mgr.makePersistent(kindCard);
-		} finally {
-			mgr.close();
-		}
-		return kindCard;
-	}
 
 	/**
 	 * This method is used for updating an existing entity. If the entity does not
@@ -171,8 +149,9 @@ public class KindCardEndpoint {
 		try {
 			updateKindCard = mgr.getObjectById(KindCard.class, kindCard.getId().getId());
 			updateKindCard.set_latestUserStoryDate(kindCard.get_latestUserStoryDate());				
-			if(updateKindCard.get_userStories() == null)
+			if(updateKindCard.get_userStories() == null) {
 				updateKindCard.set_userStories(new ArrayList<UserStory>());
+			}
 			for(UserStory userStory : kindCard.get_userStories()) {
 				if(userStory.getId() == null) {					
 					updateKindCard.get_userStories().add(0,userStory);
@@ -186,37 +165,7 @@ public class KindCardEndpoint {
 			mgr.close();
 		}
 		return updateKindCard;
-	}
-
-	/**
-	 * This method removes the entity with primary key id.
-	 * It uses HTTP DELETE method.
-	 *
-	 * @param id the primary key of the entity to be deleted.
-	 */
-	@ApiMethod(name = "removeKindCard")
-	public void removeKindCard(@Named("id") Long id) {
-		PersistenceManager mgr = getPersistenceManager();
-		try {
-			KindCard kindCard = mgr.getObjectById(KindCard.class, id);
-			mgr.deletePersistent(kindCard);
-		} finally {
-			mgr.close();
-		}
-	}
-
-	private KindCard doesKindCardExist(KindCard kindCard) {
-		KindCard returnKindCard = null;
-		PersistenceManager mgr = getPersistenceManager();		
-		try {
-			returnKindCard = mgr.getObjectById(KindCard.class, kindCard.getId().getId());
-		} catch (javax.jdo.JDOObjectNotFoundException ex) {
-			throw new EntityNotFoundException("Object does not exist");
-		} finally {
-			mgr.close();
-		}
-		return returnKindCard;
-	}
+	}		
 
 	private static PersistenceManager getPersistenceManager() {
 		return PMF.get().getPersistenceManager();

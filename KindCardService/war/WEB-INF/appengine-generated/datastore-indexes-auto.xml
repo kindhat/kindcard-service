@@ -1,4 +1,8 @@
 <!-- Indices written at Sun, 3 Aug 2014 09:11:01 PDT -->
 
-<datastore-indexes/>
+<datastore-indexes>
+    <datastore-index kind="UserStory" ancestor="true" source="manual">
+        <property name="date" direction="desc"/>
+    </datastore-index>
+ </datastore-indexes>
 

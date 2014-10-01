@@ -5,6 +5,8 @@ import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.IdentityType;
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Order;
+import javax.jdo.annotations.Extension;
 import javax.jdo.annotations.PrimaryKey;
 
 import java.lang.String;
@@ -27,6 +29,7 @@ public class KindCard {
 	
 	@Persistent( mappedBy = "kindCard")
 	@Element(dependent = "true")
+	@Order(extensions = @Extension(vendorName="datanucleus",key="list-ordering", value="date desc"))
 	private List<UserStory> userStories;
     
     public KindCard () {}
